@@ -4,13 +4,14 @@ import (
 	"encoding/csv"
 	"encoding/gob"
 	"fmt"
-
 	"log"
 	"math"
 	"net"
 	"net/http"
 	"sort"
 	"strconv"
+	"sync"
+	"time"
 )
 
 type Parametros struct {
@@ -21,8 +22,6 @@ type Parametros struct {
 	DOSIS    string
 	UBIGEO   string
 	Eleccion string
-	//RESULTADO    sortedClassVotes
-
 }
 
 func servidor() {
@@ -45,13 +44,14 @@ func servidor() {
 func handleClient(c net.Conn) {
 	var parametros Parametros
 	err := gob.NewDecoder(c).Decode(&parametros)
-	//m := make(chan sortedClassVotes)
+	m := make(chan sortedClassVotes)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 	if err != nil {
 		fmt.Println(err)
 		return
 	} else {
-		//fin := <-m
-		//resulta := fin
+		wg.Done()
 
 		kint, _ := strconv.Atoi(parametros.KNearest)
 		gf, _ := strconv.ParseFloat(parametros.GRUPO, 64)
@@ -60,9 +60,11 @@ func handleClient(c net.Conn) {
 		df, _ := strconv.ParseFloat(parametros.DOSIS, 64)
 		uf, _ := strconv.ParseFloat(parametros.UBIGEO, 64)
 
-		go Data(kint, gf, ef, sf, df, uf)
-		
-		//fmt.Println("Mensaje: ", Data(kint, gf, ef, sf, df, uf))
+		time.Sleep(8 * time.Second)
+		go Data(kint, gf, ef, sf, df, uf, m)
+
+		msg := <-m
+		fmt.Println(msg)
 
 	}
 
@@ -204,7 +206,7 @@ func contains(votesMap map[string]int, name string) bool {
 	return false
 }
 
-func Data(k int, Grupo float64, Edad float64, Sexo float64, Dosis float64, Ubigeo float64) {
+func Data(k int, Grupo float64, Edad float64, Sexo float64, Dosis float64, Ubigeo float64, m chan sortedClassVotes) {
 	url := "https://raw.githubusercontent.com/Furtherron/TA2-Concurrente/main/Vacunacion.csv"
 
 	var recordSet []Vacunacion
@@ -242,10 +244,7 @@ func Data(k int, Grupo float64, Edad float64, Sexo float64, Dosis float64, Ubige
 
 	fmt.Printf("Actual: %s\n", result[0].key)
 
-	fmt.Println(result)
-
-	
-
+	m <- result
 
 }
 

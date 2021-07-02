@@ -15,7 +15,7 @@ type Parametros struct {
 	DOSIS        string
 	UBIGEO       string
 	Eleccion     string
-	//RESULTADO    sortedClassVotes	
+	
 	 
 }
 
@@ -38,14 +38,15 @@ func cliente(parametros Parametros){
 
 func main(){
 	parametro := Parametros{
-		KNearest: "5",
-		GRUPO: "3",
-		EDAD: "14",
+		KNearest: "4",
+		GRUPO: "4",
+		EDAD: "80",
 		SEXO: "1",
 		DOSIS: "0",
 		UBIGEO: "14",
 	}
 	go cliente(parametro)
+	fmt.Println("Parametro",parametro)
 	var input string
 	fmt.Scanln(&input)
 
